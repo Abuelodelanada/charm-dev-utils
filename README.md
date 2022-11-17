@@ -73,7 +73,7 @@ Once the VM is ready you will see:
 
 ```
 Launched: charm-dev-juju-3
-Mounted '/home/jose/trabajos/canonical/repos' into 'charm-dev-juju-31:/home/ubuntu/repos'
+Mounted '/home/jose/trabajos/canonical/repos' into 'charm-dev-juju-3:/home/ubuntu/repos'
 ```
 
 Now you can jump into the new VM:
