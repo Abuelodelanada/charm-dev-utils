@@ -25,7 +25,7 @@ This script will create a VM with:
 
 This script will create a VM with:
 
-- juju stable 3.0
+- juju stable 2.9
 - microk8s 1.25-strict
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
@@ -38,7 +38,7 @@ This script will create a VM with:
 
 This script will create a VM with:
 
-- juju latest/edge
+- [juju](https://juju.is) latest/edge
 - microk8s 1.25-strict
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
