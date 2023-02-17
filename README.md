@@ -63,7 +63,7 @@ you may run:
 multipass launch --cloud-init charm-dev-juju-3.0.yaml \
 --timeout 1200 \
 --name charm-dev-juju-3 \
---mem 4G \
+--memory 4G \
 --cpus 3 \
 --disk 30G \
 --mount /home/jose/trabajos/canonical/repos:/home/ubuntu/repos
