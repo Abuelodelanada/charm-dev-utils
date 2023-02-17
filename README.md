@@ -7,6 +7,18 @@ A repository to collect initiatives around making the life of a [charm](https://
 In the `cloud-init` directory you will find some cloud-init scripts to launch reusable VMs to everyday charm development.
 
 
+### `charm-dev-juju-3.1.yaml`
+
+This script will create a VM with:
+
+- [juju](https://juju.is) stable 3.1
+- [microk8s](https://juju.is/docs/sdk) 1.26-strict
+- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
+  - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
+  - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
+  - juju
+- [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
+
 
 ### `charm-dev-juju-3.0.yaml`
 
