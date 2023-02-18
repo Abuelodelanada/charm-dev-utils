@@ -9,6 +9,7 @@ packages:
 - tox
 - gnome-keyring
 - kitty-terminfo
+- sshfs
 
 snap:
   commands:
@@ -19,10 +20,13 @@ snap:
   - snap install --classic charmcraft
   - snap install jhack --channel=latest/stable
   - snap install yq
+  - snap install multipass-sshfs
   - snap refresh
 
 runcmd:
-- DEBIAN_FRONTEND=noninteractive apt -y upgrade
+- DEBIAN_FRONTEND=noninteractive apt-get remove -y landscape-client landscape-common adwaita-icon-theme humanity-icon-theme
+- DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+- DEBIAN_FRONTEND=noninteractive apt-get -y autoremove
 
 - |
   # disable swap
@@ -42,11 +46,6 @@ runcmd:
   systemctl disable ua-messaging.service ua-messaging.timer --now
   systemctl disable ua-timer.timer ua-timer.service --now
   systemctl disable systemd-tmpfiles-clean.timer --now
-
-- |
-  # apt cleanup
-  apt remove -y landscape-client landscape-common
-  apt-get autoremove -y
 
 - |
   # oh-my-zsh + juju plugin
