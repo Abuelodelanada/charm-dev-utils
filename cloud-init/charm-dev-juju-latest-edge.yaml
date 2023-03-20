@@ -96,7 +96,7 @@ runcmd:
   microk8s.kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
   microk8s.kubectl rollout status daemonsets/nginx-ingress-microk8s-controller -n ingress -w --timeout=600s
 
-  sudo -u ubuntu juju bootstrap microk8s charm-dev-batteries
+  sudo -u ubuntu juju bootstrap microk8s microk8s
 
   # dump config (this is needed for utils such as k9s or kdash)
   microk8s config | sudo -u ubuntu tee /home/ubuntu/.kube/config > /dev/null
