@@ -102,6 +102,9 @@ runcmd:
   # dump config (this is needed for utils such as k9s or kdash)
   microk8s config | sudo -u ubuntu tee /home/ubuntu/.kube/config > /dev/null
 
+  # bootstrap lxd
+  sudo -u ubuntu juju bootstrap localhost lxd
+
   # We need to connect the dot-local-share-juju interface with jhack
   sudo snap connect jhack:dot-local-share-juju snapd
 
