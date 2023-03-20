@@ -97,7 +97,6 @@ runcmd:
   microk8s.kubectl rollout status daemonsets/nginx-ingress-microk8s-controller -n ingress -w --timeout=600s
 
   sudo -u ubuntu juju bootstrap microk8s charm-dev-batteries
-  sudo -u ubuntu juju add-model --config logging-config="<root>=WARNING; unit=DEBUG" --config update-status-hook-interval="60m" welcome
 
   # dump config (this is needed for utils such as k9s or kdash)
   microk8s config | sudo -u ubuntu tee /home/ubuntu/.kube/config > /dev/null
