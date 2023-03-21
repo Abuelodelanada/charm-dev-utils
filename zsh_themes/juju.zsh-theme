@@ -6,7 +6,7 @@ local current_dir="%B%{$fg[blue]%}%~ %{$reset_color%}"
 
 local vcs_branch='$(git_prompt_info)$(hg_prompt_info)'
 local venv_prompt='$(virtualenv_prompt_info)'
-local juju='%{$fg[cyan]%}[$(juju_controller):$(juju_model)]%{$reset_color%}'
+local juju='%{$fg[cyan]%}[$(jcontroller):$(jmodel)]%{$reset_color%}'
 
 ZSH_THEME_RVM_PROMPT_OPTIONS="i v g"
 
