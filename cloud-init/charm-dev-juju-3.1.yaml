@@ -47,13 +47,20 @@ runcmd:
   systemctl disable ua-timer.timer ua-timer.service --now
   systemctl disable systemd-tmpfiles-clean.timer --now
 
+  # Disable IPv6
+  echo "net.ipv6.conf.all.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.default.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.lo.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  sysctl -p
+
 - |
   # oh-my-zsh + juju plugin
   sudo -u ubuntu sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   sudo -u ubuntu git clone https://github.com/zsh-users/zsh-autosuggestions.git ~ubuntu/.oh-my-zsh/custom/plugins/zsh-autosuggestions
   sudo -u ubuntu git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~ubuntu/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
   sudo -u ubuntu sed -i 's/plugins=(git)/plugins=(fzf git zsh-autosuggestions zsh-syntax-highlighting virtualenv colored-man-pages juju colorize)/g' ~ubuntu/.zshrc
-  sudo -u ubuntu sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="bira"/g' ~ubuntu/.zshrc
+  sudo -u ubuntu wget https://raw.githubusercontent.com/Abuelodelanada/charm-dev-utils/main/zsh_themes/juju.zsh-theme ~/.oh-my-zsh/themes/
+  sudo -u ubuntu sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="juju"/g' ~ubuntu/.zshrc
 
 - |
   # change default shell
@@ -90,11 +97,13 @@ runcmd:
   microk8s.kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
   microk8s.kubectl rollout status daemonsets/nginx-ingress-microk8s-controller -n ingress -w --timeout=600s
 
-  sudo -u ubuntu juju bootstrap microk8s charm-dev-batteries
-  sudo -u ubuntu juju add-model --config logging-config="<root>=WARNING; unit=DEBUG" --config update-status-hook-interval="60m" welcome
+  sudo -u ubuntu juju bootstrap microk8s microk8s
 
   # dump config (this is needed for utils such as k9s or kdash)
   microk8s config | sudo -u ubuntu tee /home/ubuntu/.kube/config > /dev/null
+
+  # bootstrap lxd
+  sudo -u ubuntu juju bootstrap localhost lxd
 
   # We need to connect the dot-local-share-juju interface with jhack
   sudo snap connect jhack:dot-local-share-juju snapd
