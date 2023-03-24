@@ -128,3 +128,4 @@ And voilà, you have a VM with all you need to start developing Charmed Operator
 
 In the `zsh_themes` directory you will find a `juju.zsh-theme` that uses the [`juju`](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju) plugin to show a prompt with juju information about controller and model.
 
+![prompt](https://user-images.githubusercontent.com/939888/227611569-23372d45-0963-4e2e-98da-8109e2dcbd8f.png)
