@@ -16,7 +16,7 @@ This script will create a VM with:
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-  - juju
+  - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
 
 
@@ -29,7 +29,7 @@ This script will create a VM with:
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-  - juju
+  - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
 
 
@@ -42,7 +42,7 @@ This script will create a VM with:
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-  - juju
+  - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
 
 
@@ -55,7 +55,7 @@ This script will create a VM with:
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-  - juju
+  - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
 
 
@@ -71,7 +71,7 @@ Let's say you need to launch a VM using [Multipass](https://multipass.run/) that
 
 you may run:
 
-```
+```shell
 multipass launch --cloud-init charm-dev-juju-3.0.yaml \
 --timeout 1200 \
 --name charm-dev-juju-3 \
@@ -90,24 +90,41 @@ Mounted '/home/jose/trabajos/canonical/repos' into 'charm-dev-juju-3:/home/ubunt
 
 Now you can jump into the new VM:
 
-```
+```shell
 multipass shell charm-dev-juju-3
 ```
 
-```
-Welcome to Ubuntu 22.04.1 LTS (GNU/Linux 5.15.0-52-generic x86_64)
+```shell
+Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-67-generic x86_64)
 
  * Documentation:  https://help.ubuntu.com
  * Management:     https://landscape.canonical.com
  * Support:        https://ubuntu.com/advantage
 
 
+ * Introducing Expanded Security Maintenance for Applications.
+   Receive updates to over 25,000 software packages with your
+   Ubuntu Pro subscription. Free for personal use.
+
+     https://ubuntu.com/pro
+
+Expanded Security Maintenance for Applications is not enabled.
+
 0 updates can be applied immediately.
 
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
 
-*** System restart required ***
-╭─ubuntu@charm-dev-juju-3 ~
-╰─$
+
+Last login: Fri Mar 24 15:40:53 2023 from 192.168.122.1
+╭─ubuntu@charm-dev-juju-29 ~ [microk8s:controller]
+╰─$ 
 ```
 
 And voilà, you have a VM with all you need to start developing Charmed Operators!
+
+
+## zsh_themes
+
+In the `zsh_themes` directory you will find a `juju.zsh-theme` that uses the [`juju`](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju) plugin to show a prompt with juju information about controller and model.
+
