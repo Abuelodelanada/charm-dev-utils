@@ -13,7 +13,7 @@ This script will create a VM with:
 
 - [juju](https://juju.is) stable 3.1
 - [microk8s](https://juju.is/docs/sdk) 1.26-strict
-- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
+- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
@@ -26,7 +26,7 @@ This script will create a VM with:
 
 - [juju](https://juju.is) stable 3.0
 - [microk8s](https://juju.is/docs/sdk) 1.26-strict
-- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
+- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
@@ -39,7 +39,7 @@ This script will create a VM with:
 
 - juju stable 2.9
 - microk8s 1.26-strict
-- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
+- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
@@ -52,7 +52,7 @@ This script will create a VM with:
 
 - [juju](https://juju.is) latest/edge
 - microk8s 1.26-strict
-- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [bira theme](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#bira) with plugins:
+- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
