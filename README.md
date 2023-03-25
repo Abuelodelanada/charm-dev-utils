@@ -1,6 +1,6 @@
 # Charm development utils
 
-A repository to collect initiatives around making the life of a [charm](https://juju.is/docs/sdk) author easy.
+A repository to collect initiatives around making the life of a [charm](https://juju.is/docs/sdk) author easier.
 
 ## cloud-init
 
