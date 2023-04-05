@@ -88,7 +88,7 @@ runcmd:
   # The dns addon will restart the api server so you may see a blip in the availability
   # Separating addons to avoid errors such as
   # dial tcp 127.0.0.1:16443: connect: connection refused
-  microk8s.enable dns storage
+  microk8s.enable dns storage rbac
   microk8s.kubectl rollout status deployments/coredns -n kube-system -w --timeout=600s
 
   microk8s.enable hostpath-storage
