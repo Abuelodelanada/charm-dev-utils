@@ -18,6 +18,7 @@ This script will create a VM with:
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
+- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
 
 
 ### `charm-dev-juju-3.0.yaml`
@@ -31,6 +32,7 @@ This script will create a VM with:
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
+- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
 
 
 ### `charm-dev-juju-2.9.yaml`
@@ -44,6 +46,7 @@ This script will create a VM with:
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
+- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
 
 
 ### `charm-dev-juju-latest-edge.yaml`
@@ -57,6 +60,7 @@ This script will create a VM with:
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
+- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
 
 
 
@@ -118,7 +122,7 @@ See https://ubuntu.com/esm or run: sudo pro status
 
 Last login: Fri Mar 24 15:40:53 2023 from 192.168.122.1
 ╭─ubuntu@charm-dev-juju-29 ~ [microk8s:controller]
-╰─$ 
+╰─$
 ```
 
 And voilà, you have a VM with all you need to start developing Charmed Operators!
