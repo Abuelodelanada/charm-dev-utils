@@ -1,0 +1,347 @@
+package_update: true
+
+# packages:
+# - python3-pip
+# - jq
+# - sysstat
+# - zsh
+# - fzf
+# - tox
+# - gnome-keyring
+# - kitty-terminfo
+# - sshfs
+
+snap:
+  commands:
+  - snap install prometheus-alertmanager
+  - snap install prometheus
+  # - snap install yq
+  # - snap install multipass-sshfs
+  # - snap refresh
+
+runcmd:
+# - DEBIAN_FRONTEND=noninteractive apt-get remove -y landscape-client landscape-common adwaita-icon-theme humanity-icon-theme
+# - DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+# - DEBIAN_FRONTEND=noninteractive apt-get -y autoremove
+
+- |
+  # disable swap
+  sysctl -w vm.swappiness=0
+  echo "vm.swappiness = 0" | tee -a /etc/sysctl.conf
+  swapoff -a
+
+- |
+  # disable unnecessary services
+  systemctl disable man-db.timer man-db.service --now
+  systemctl disable apport.service apport-autoreport.service  --now
+  systemctl disable apt-daily.service apt-daily.timer --now
+  systemctl disable apt-daily-upgrade.service apt-daily-upgrade.timer --now
+  systemctl disable unattended-upgrades.service --now
+  systemctl disable motd-news.service motd-news.timer --now
+  systemctl disable bluetooth.target --now
+  systemctl disable ua-messaging.service ua-messaging.timer --now
+  systemctl disable ua-timer.timer ua-timer.service --now
+  systemctl disable systemd-tmpfiles-clean.timer --now
+
+  # Disable IPv6
+  echo "net.ipv6.conf.all.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.default.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.lo.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  sysctl -p
+
+# - |
+#   # oh-my-zsh + juju plugin + scenario
+#   sudo -u ubuntu sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+#   sudo -u ubuntu git clone https://github.com/zsh-users/zsh-autosuggestions.git ~ubuntu/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+#   sudo -u ubuntu git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~ubuntu/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+#   sudo -u ubuntu sed -i 's/plugins=(git)/plugins=(fzf git zsh-autosuggestions zsh-syntax-highlighting virtualenv colored-man-pages juju colorize)/g' ~ubuntu/.zshrc
+#   sudo -u ubuntu echo 'export PATH=$PATH:$HOME/.local/bin' >> ~ubuntu/.zshrc
+#   sudo -u ubuntu wget -P ~ubuntu/.oh-my-zsh/themes/ https://raw.githubusercontent.com/Abuelodelanada/charm-dev-utils/main/zsh_themes/juju.zsh-theme
+#   sudo -u ubuntu sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="juju"/g' ~ubuntu/.zshrc
+
+# - |
+#   # change default shell
+#   sudo chsh -s /bin/zsh ubuntu
+
+- |
+  # Set up root ca
+  # https://openssl-ca.readthedocs.io/en/latest/create-the-root-pair.html
+
+  mkdir /root/ca
+  cd /root/ca
+  
+  mkdir certs crl newcerts private
+  chmod 700 private
+
+  # The index.txt and serial files act as a flat file database to keep track of signed certificates.
+  touch index.txt
+  echo 1000 > serial
+
+  # Prepare the configuration file
+  cat << 'EOF' > /root/ca/openssl.cnf
+  # OpenSSL root CA configuration file.
+  # Copy to `/root/ca/openssl.cnf`.
+
+  [ ca ]
+  # `man ca`
+  default_ca = CA_default
+
+  [ CA_default ]
+  # Directory and file locations.
+  dir               = /root/ca
+  certs             = $dir/certs
+  crl_dir           = $dir/crl
+  new_certs_dir     = $dir/newcerts
+  database          = $dir/index.txt
+  serial            = $dir/serial
+  RANDFILE          = $dir/private/.rand
+
+  # The root key and root certificate.
+  private_key       = $dir/private/ca.key.pem
+  certificate       = $dir/certs/ca.cert.pem
+
+  # For certificate revocation lists.
+  crlnumber         = $dir/crlnumber
+  crl               = $dir/crl/ca.crl.pem
+  crl_extensions    = crl_ext
+  default_crl_days  = 30
+
+  # SHA-1 is deprecated, so use SHA-2 instead.
+  default_md        = sha256
+
+  name_opt          = ca_default
+  cert_opt          = ca_default
+  default_days      = 375
+  preserve          = no
+  policy            = policy_strict
+
+  [ policy_strict ]
+  # The root CA should only sign intermediate certificates that match.
+  # See the POLICY FORMAT section of `man ca`.
+  #countryName             = match
+  #stateOrProvinceName     = match
+  #organizationName        = match
+  #organizationalUnitName  = optional
+  #commonName              = supplied
+  #emailAddress            = optional
+  countryName             = optional
+  stateOrProvinceName     = optional
+  localityName            = optional
+  organizationName        = optional
+  organizationalUnitName  = optional
+  commonName              = supplied
+  emailAddress            = optional
+
+  [ policy_loose ]
+  # Allow the intermediate CA to sign a more diverse range of certificates.
+  # See the POLICY FORMAT section of the `ca` man page.
+  countryName             = optional
+  stateOrProvinceName     = optional
+  localityName            = optional
+  organizationName        = optional
+  organizationalUnitName  = optional
+  commonName              = supplied
+  emailAddress            = optional
+
+  [ req ]
+  # Options for the `req` tool (`man req`).
+  default_bits        = 2048
+  distinguished_name  = req_distinguished_name
+  string_mask         = utf8only
+
+  # SHA-1 is deprecated, so use SHA-2 instead.
+  default_md          = sha256
+
+  # Extension to add when the -x509 option is used.
+  x509_extensions     = v3_ca
+
+  [ req_distinguished_name ]
+  # See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
+  commonName                      = Common Name
+  countryName                     = Country Name (2 letter code)
+  # stateOrProvinceName             = State or Province Name
+  # localityName                    = Locality Name
+  # 0.organizationName              = Organization Name
+  # organizationalUnitName          = Organizational Unit Name
+  # emailAddress                    = Email Address
+
+  # Optionally, specify some defaults.
+  countryName_default             = XX
+  stateOrProvinceName_default     = MyState
+  localityName_default            =
+  0.organizationName_default      = MyOrg
+  organizationalUnitName_default  =
+  emailAddress_default            =
+
+  [ v3_ca ]
+  # Extensions for a typical CA (`man x509v3_config`).
+  subjectKeyIdentifier = hash
+  authorityKeyIdentifier = keyid:always,issuer
+  basicConstraints = critical, CA:true
+  keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+  [ v3_intermediate_ca ]
+  # Extensions for a typical intermediate CA (`man x509v3_config`).
+  subjectKeyIdentifier = hash
+  authorityKeyIdentifier = keyid:always,issuer
+  basicConstraints = critical, CA:true, pathlen:0
+  keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+  [ usr_cert ]
+  # Extensions for client certificates (`man x509v3_config`).
+  basicConstraints = CA:FALSE
+  nsCertType = client, email
+  nsComment = "OpenSSL Generated Client Certificate"
+  subjectKeyIdentifier = hash
+  authorityKeyIdentifier = keyid,issuer
+  keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+  extendedKeyUsage = clientAuth, emailProtection
+
+  [ server_cert ]
+  # Extensions for server certificates (`man x509v3_config`).
+  basicConstraints = CA:FALSE
+  nsCertType = server
+  nsComment = "OpenSSL Generated Server Certificate"
+  subjectKeyIdentifier = hash
+  authorityKeyIdentifier = keyid,issuer:always
+  keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+  extendedKeyUsage = serverAuth
+
+  [ crl_ext ]
+  # Extension for CRLs (`man x509v3_config`).
+  authorityKeyIdentifier=keyid:always
+
+  [ ocsp ]
+  # Extension for OCSP signing certificates (`man ocsp`).
+  basicConstraints = CA:FALSE
+  subjectKeyIdentifier = hash
+  authorityKeyIdentifier = keyid,issuer
+  keyUsage = critical, digitalSignature
+  extendedKeyUsage = critical, OCSPSigning
+  EOF
+
+
+  # Generate root ca key
+  openssl genpkey -algorithm RSA -out /root/ca/private/ca.key.pem -pkeyopt rsa_keygen_bits:4096
+  chmod 400 /root/ca/private/ca.key.pem
+
+  # Generate root certificate request
+  # Use the root key (ca.key.pem) to create a root certificate (ca.cert.pem)
+  openssl req -config /root/ca/openssl.cnf -key /root/ca/private/ca.key.pem -new -x509 -days 9999 -sha256 -extensions v3_ca -subj "/C=GB/CN=localhost" -addext "subjectAltName = DNS:localhost" -out /root/ca/certs/ca.cert.pem
+  chmod 444 /root/ca/certs/ca.cert.pem
+
+- |
+  # Create the intermediate pair
+  # https://openssl-ca.readthedocs.io/en/latest/create-the-intermediate-pair.html
+  # Skip
+
+- |
+  # Alertmanager
+
+  # Generate private key
+  echo "127.0.0.1 alertmanager.local" | sudo tee -a /etc/hosts
+  openssl genpkey -algorithm RSA -out /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem
+
+  # Generate CSR for alertmanager using the private key
+  openssl req -config /root/ca/openssl.cnf -key /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem -new -sha256 -out /var/snap/prometheus-alertmanager/current/alertmanager.local.csr.pem -subj "/C=GB/CN=alertmanager.local" -addext "subjectAltName = DNS:alertmanager.local,DNS:www.alertmanager.local"
+
+  # Create a server certificate by signing the CSR with the root CA private key
+  openssl ca -config /root/ca/openssl.cnf -policy policy_loose -extensions server_cert -days 375 -notext -md sha256 -in /var/snap/prometheus-alertmanager/current/alertmanager.local.csr.pem -out /var/snap/prometheus-alertmanager/current/alertmanager.local.cert.pem -batch
+  chmod 444 /var/snap/prometheus-alertmanager/current/alertmanager.local.cert.pem
+
+  cat << 'EOF' > /var/snap/prometheus-alertmanager/current/alertmanager.yml
+  global:
+    http_config:
+      tls_config:
+        insecure_skip_verify: false
+        cert_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.cert.pem
+        key_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem
+        # Do we need ca_file?
+  receivers:
+  - name: dummy
+    webhook_configs:
+    - url: http://127.0.0.1:5001/
+  route:
+    group_by:
+    - alertname
+    group_interval: 5m
+    group_wait: 30s
+    receiver: dummy
+    repeat_interval: 1h
+  EOF
+
+  sudo chown ubuntu:ubuntu /var/snap/prometheus-alertmanager/current/*.pem
+  chmod ugo+rw /var/snap/prometheus-alertmanager/current/*.pem
+  snap restart prometheus-alertmanager
+
+- |
+  # Prometheus
+
+  # Generate private key
+  echo "127.0.0.1 prometheus.local" | sudo tee -a /etc/hosts
+  openssl genpkey -algorithm RSA -out /var/snap/prometheus/current/prometheus.local.key.pem
+
+  # Generate CSR for prometheus using the private key
+  openssl req -config /root/ca/openssl.cnf -key /var/snap/prometheus/current/prometheus.local.key.pem -new -sha256 -out /var/snap/prometheus/current/prometheus.local.csr.pem -subj "/C=GB/CN=prometheus.local" -addext "subjectAltName = DNS:prometheus.local,DNS:www.prometheus.local"
+
+  # Create a server certificate by signing the CSR with the root CA private key
+  openssl ca -config /root/ca/openssl.cnf -policy policy_loose -extensions server_cert -days 375 -notext -md sha256 -in /var/snap/prometheus/current/prometheus.local.csr.pem -out /var/snap/prometheus/current/prometheus.local.cert.pem -batch
+  chmod 444 /var/snap/prometheus/current/prometheus.local.cert.pem
+
+  cat << 'EOF' > /var/snap/prometheus/current/prometheus.yml
+  alerting:
+    alertmanagers:
+    - path_prefix: /
+      scheme: https
+      tls_config:
+        insecure_skip_verify: false
+        cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
+        key_file: /var/snap/prometheus/current/prometheus.local.key.pem
+        # Do we need ca_file?
+      static_configs:
+      - targets:
+        - alertmanager.local:9093
+  global:
+    evaluation_interval: 1m
+    scrape_interval: 1m
+    scrape_timeout: 10s
+  rule_files:
+  - /etc/prometheus/rules/juju_*.rules
+  scrape_configs:
+  - honor_timestamps: true
+    job_name: prometheus
+    metrics_path: /metrics
+    scheme: https
+    tls_config:
+      insecure_skip_verify: false
+      cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
+      key_file: /var/snap/prometheus/current/prometheus.local.key.pem
+      # Do we need ca_file?
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    static_configs:
+    - labels:
+        host: prometheus.local
+      targets:
+      - prometheus.local:9090
+  - honor_labels: true
+    job_name: juju_tls-demo_2a581d2e_am_prometheus_scrape
+    metrics_path: /metrics
+    scheme: https
+    tls_config:
+      insecure_skip_verify: false
+      cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
+      key_file: /var/snap/prometheus/current/prometheus.local.key.pem
+      # Do we need ca_file?
+    static_configs:
+    - labels:
+        application: alertmanager
+      targets:
+      - alertmanager.local:9093
+  EOF
+
+  sudo chown ubuntu:ubuntu /var/snap/prometheus/current/*.pem
+  chmod ugo+rw /var/snap/prometheus/current/*.pem
+  snap restart prometheus
+
+final_message: "The system is finally up, after $UPTIME seconds"
