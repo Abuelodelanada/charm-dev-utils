@@ -1,3 +1,18 @@
+# This is a cloud-init for testing TLS with prometheus and alertmanager
+# multipass launch --cloud-init ./prometheus-alertmanager-tls-test.yaml --name tls-test --memory 4G --cpus 2 --disk 30G
+#
+# When the instance is ready, you should be able to:
+#
+# $ curl http://prometheus.local:9090/-/ready
+# Client sent an HTTP request to an HTTPS server.
+#
+# $ curl https://prometheus.local:9090/-/ready
+# curl: (60) SSL certificate problem: unable to get local issuer certificate
+#
+# $ curl --capath $HOME --cacert $HOME/ca.cert.pem https://prometheus.local:9090/-/ready
+# Prometheus Server is Ready.
+
+
 package_update: true
 
 # packages:
@@ -69,7 +84,7 @@ runcmd:
 
   mkdir /root/ca
   cd /root/ca
-  
+
   mkdir certs crl newcerts private
   chmod 700 private
 
@@ -230,6 +245,10 @@ runcmd:
   openssl req -config /root/ca/openssl.cnf -key /root/ca/private/ca.key.pem -new -x509 -days 9999 -sha256 -extensions v3_ca -subj "/C=GB/CN=localhost" -addext "subjectAltName = DNS:localhost" -out /root/ca/certs/ca.cert.pem
   chmod 444 /root/ca/certs/ca.cert.pem
 
+  cp /root/ca/certs/ca.cert.pem /home/ubuntu
+  chown ubuntu:ubuntu /home/ubuntu/ca.cert.pem
+
+
 - |
   # Create the intermediate pair
   # https://openssl-ca.readthedocs.io/en/latest/create-the-intermediate-pair.html
@@ -251,12 +270,12 @@ runcmd:
 
   cat << 'EOF' > /var/snap/prometheus-alertmanager/current/alertmanager.yml
   global:
-    http_config:
-      tls_config:
-        insecure_skip_verify: false
-        cert_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.cert.pem
-        key_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem
-        # Do we need ca_file?
+    #http_config:
+    #  tls_config:
+    #    insecure_skip_verify: false
+    #    cert_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.cert.pem
+    #    key_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem
+    #    # Do we need ca_file?
   receivers:
   - name: dummy
     webhook_configs:
@@ -272,6 +291,20 @@ runcmd:
 
   sudo chown ubuntu:ubuntu /var/snap/prometheus-alertmanager/current/*.pem
   chmod ugo+rw /var/snap/prometheus-alertmanager/current/*.pem
+
+  cat << 'EOF' > /var/snap/prometheus-alertmanager/current/web-config.yml
+  # https://prometheus.io/docs/alerting/latest/https/
+  tls_server_config:
+    # Certificate and key files for server to use to authenticate to client.
+    cert_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.cert.pem
+    key_file: /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem
+  EOF
+
+  cat << 'EOF' > /var/snap/prometheus-alertmanager/current/daemon_arguments
+  # Set the command-line arguments to pass to the server.
+  ARGS="--web.config.file=${SNAP_DATA}/web-config.yml"
+  EOF
+
   snap restart prometheus-alertmanager
 
 - |
@@ -292,12 +325,12 @@ runcmd:
   alerting:
     alertmanagers:
     - path_prefix: /
-      scheme: https
-      tls_config:
-        insecure_skip_verify: false
-        cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
-        key_file: /var/snap/prometheus/current/prometheus.local.key.pem
-        # Do we need ca_file?
+      #scheme: https
+      #tls_config:
+      #  insecure_skip_verify: false
+      #  cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
+      #  key_file: /var/snap/prometheus/current/prometheus.local.key.pem
+      #  # Do we need ca_file?
       static_configs:
       - targets:
         - alertmanager.local:9093
@@ -312,11 +345,11 @@ runcmd:
     job_name: prometheus
     metrics_path: /metrics
     scheme: https
-    tls_config:
-      insecure_skip_verify: false
-      cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
-      key_file: /var/snap/prometheus/current/prometheus.local.key.pem
-      # Do we need ca_file?
+    #tls_config:
+    #  insecure_skip_verify: false
+    #  cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
+    #  key_file: /var/snap/prometheus/current/prometheus.local.key.pem
+    #  # Do we need ca_file?
     scrape_interval: 5s
     scrape_timeout: 5s
     static_configs:
@@ -328,11 +361,11 @@ runcmd:
     job_name: juju_tls-demo_2a581d2e_am_prometheus_scrape
     metrics_path: /metrics
     scheme: https
-    tls_config:
-      insecure_skip_verify: false
-      cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
-      key_file: /var/snap/prometheus/current/prometheus.local.key.pem
-      # Do we need ca_file?
+    #tls_config:
+    #  insecure_skip_verify: false
+    #  cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
+    #  key_file: /var/snap/prometheus/current/prometheus.local.key.pem
+    #  # Do we need ca_file?
     static_configs:
     - labels:
         application: alertmanager
@@ -342,6 +375,20 @@ runcmd:
 
   sudo chown ubuntu:ubuntu /var/snap/prometheus/current/*.pem
   chmod ugo+rw /var/snap/prometheus/current/*.pem
+
+  cat << 'EOF' > /var/snap/prometheus/current/web-config.yml
+  # https://prometheus.io/docs/prometheus/latest/configuration/https/
+  tls_server_config:
+    # Certificate and key files for server to use to authenticate to client.
+    cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
+    key_file: /var/snap/prometheus/current/prometheus.local.key.pem
+  EOF
+
+  cat << 'EOF' > /var/snap/prometheus/current/daemon_arguments
+  # Set the command-line arguments to pass to the server.
+  ARGS="--web.config.file=${SNAP_DATA}/web-config.yml"
+  EOF
+
   snap restart prometheus
 
 final_message: "The system is finally up, after $UPTIME seconds"
