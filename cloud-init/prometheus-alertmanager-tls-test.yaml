@@ -17,7 +17,9 @@
 #
 # $ curl --capath $HOME --cacert $HOME/ca.cert.pem https://127.0.0.1:9090/-/ready
 # curl: (60) SSL: certificate subject name 'prometheus.local' does not match target host name '127.0.0.1'
-
+#
+# $ curl --capath $HOME --cacert $HOME/ca.cert.pem https://prometheus.local:9090/api/v1/targets | jq
+# ...
 
 package_update: true
 
@@ -258,6 +260,7 @@ runcmd:
   openssl req -config /root/ca/openssl.cnf -key /root/ca/private/ca.key.pem -new -x509 -days 9999 -sha256 -extensions v3_ca -subj "/C=GB/OU=ROOTCA" -addext "subjectAltName = DNS:localhost" -out /root/ca/certs/ca.cert.pem
   chmod 444 /root/ca/certs/ca.cert.pem
 
+  # Copy CA cert for user's convenience
   cp /root/ca/certs/ca.cert.pem /home/ubuntu
   chown ubuntu:ubuntu /home/ubuntu/ca.cert.pem
 
@@ -343,9 +346,10 @@ runcmd:
   alerting:
     alertmanagers:
     - path_prefix: /
-      #scheme: https
-      #tls_config:
-      #  insecure_skip_verify: false
+      scheme: https
+      tls_config:
+        insecure_skip_verify: false
+        ca_file: /var/snap/prometheus/current/ca.cert.pem
       #  cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
       #  key_file: /var/snap/prometheus/current/prometheus.local.key.pem
       #  # Do we need ca_file?
@@ -363,8 +367,9 @@ runcmd:
     job_name: prometheus
     metrics_path: /metrics
     scheme: https
-    #tls_config:
-    #  insecure_skip_verify: false
+    tls_config:
+      insecure_skip_verify: false
+      ca_file: /var/snap/prometheus/current/ca.cert.pem
     #  cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
     #  key_file: /var/snap/prometheus/current/prometheus.local.key.pem
     #  # Do we need ca_file?
@@ -379,8 +384,9 @@ runcmd:
     job_name: juju_tls-demo_2a581d2e_am_prometheus_scrape
     metrics_path: /metrics
     scheme: https
-    #tls_config:
-    #  insecure_skip_verify: false
+    tls_config:
+      insecure_skip_verify: false
+      ca_file: /var/snap/prometheus/current/ca.cert.pem
     #  cert_file: /var/snap/prometheus/current/prometheus.local.cert.pem
     #  key_file: /var/snap/prometheus/current/prometheus.local.key.pem
     #  # Do we need ca_file?
@@ -406,6 +412,10 @@ runcmd:
   # Set the command-line arguments to pass to the server.
   ARGS="--web.config.file=${SNAP_DATA}/web-config.yml"
   EOF
+
+  # Copy CA cert to validate scrape target servers certificates with
+  cp /root/ca/certs/ca.cert.pem /var/snap/prometheus/current/
+  chmod ugo+rw /var/snap/prometheus/current/ca.cert.pem
 
   snap restart prometheus
 
