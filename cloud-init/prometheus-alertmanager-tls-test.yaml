@@ -11,13 +11,19 @@
 #
 # $ curl --capath $HOME --cacert $HOME/ca.cert.pem https://prometheus.local:9090/-/ready
 # Prometheus Server is Ready.
+#
+# $ curl --capath $HOME --cacert $HOME/ca.cert.pem https://localhost:9090/-/ready
+# curl: (60) SSL: certificate subject name 'prometheus.local' does not match target host name 'localhost'
+#
+# $ curl --capath $HOME --cacert $HOME/ca.cert.pem https://127.0.0.1:9090/-/ready
+# curl: (60) SSL: certificate subject name 'prometheus.local' does not match target host name '127.0.0.1'
 
 
 package_update: true
 
-# packages:
+packages:
 # - python3-pip
-# - jq
+- jq
 # - sysstat
 # - zsh
 # - fzf
@@ -79,6 +85,7 @@ runcmd:
 #   sudo chsh -s /bin/zsh ubuntu
 
 - |
+  set -eux
   # Set up root ca
   # https://openssl-ca.readthedocs.io/en/latest/create-the-root-pair.html
 
@@ -130,6 +137,9 @@ runcmd:
   preserve          = no
   policy            = policy_strict
 
+  copy_extensions   = copy
+
+
   [ policy_strict ]
   # The root CA should only sign intermediate certificates that match.
   # See the POLICY FORMAT section of `man ca`.
@@ -144,7 +154,7 @@ runcmd:
   localityName            = optional
   organizationName        = optional
   organizationalUnitName  = optional
-  commonName              = supplied
+  commonName              = optional
   emailAddress            = optional
 
   [ policy_loose ]
@@ -155,7 +165,7 @@ runcmd:
   localityName            = optional
   organizationName        = optional
   organizationalUnitName  = optional
-  commonName              = supplied
+  commonName              = optional
   emailAddress            = optional
 
   [ req ]
@@ -242,7 +252,10 @@ runcmd:
 
   # Generate root certificate request
   # Use the root key (ca.key.pem) to create a root certificate (ca.cert.pem)
-  openssl req -config /root/ca/openssl.cnf -key /root/ca/private/ca.key.pem -new -x509 -days 9999 -sha256 -extensions v3_ca -subj "/C=GB/CN=localhost" -addext "subjectAltName = DNS:localhost" -out /root/ca/certs/ca.cert.pem
+  # Intentionally not including '/CN=localhost' in '-subj'
+  # But must differentiate somehow, otherwise openssl will complain:
+  # ERROR:There is already a certificate for /C=GB
+  openssl req -config /root/ca/openssl.cnf -key /root/ca/private/ca.key.pem -new -x509 -days 9999 -sha256 -extensions v3_ca -subj "/C=GB/OU=ROOTCA" -addext "subjectAltName = DNS:localhost" -out /root/ca/certs/ca.cert.pem
   chmod 444 /root/ca/certs/ca.cert.pem
 
   cp /root/ca/certs/ca.cert.pem /home/ubuntu
@@ -255,6 +268,7 @@ runcmd:
   # Skip
 
 - |
+  set -eux
   # Alertmanager
 
   # Generate private key
@@ -262,7 +276,9 @@ runcmd:
   openssl genpkey -algorithm RSA -out /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem
 
   # Generate CSR for alertmanager using the private key
-  openssl req -config /root/ca/openssl.cnf -key /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem -new -sha256 -out /var/snap/prometheus-alertmanager/current/alertmanager.local.csr.pem -subj "/C=GB/CN=alertmanager.local" -addext "subjectAltName = DNS:alertmanager.local,DNS:www.alertmanager.local"
+  # Do not include '/CN=alertmanager.local' in '-subj', otherwise scrape will fail with:
+  # "... certificate relies on legacy Common Name field, use SANs instead"
+  openssl req -config /root/ca/openssl.cnf -key /var/snap/prometheus-alertmanager/current/alertmanager.local.key.pem -new -sha256 -out /var/snap/prometheus-alertmanager/current/alertmanager.local.csr.pem -subj "/C=GB/OU=ALERTMANAGER" -addext "subjectAltName = DNS:alertmanager.local,DNS:www.alertmanager.local"
 
   # Create a server certificate by signing the CSR with the root CA private key
   openssl ca -config /root/ca/openssl.cnf -policy policy_loose -extensions server_cert -days 375 -notext -md sha256 -in /var/snap/prometheus-alertmanager/current/alertmanager.local.csr.pem -out /var/snap/prometheus-alertmanager/current/alertmanager.local.cert.pem -batch
@@ -308,6 +324,7 @@ runcmd:
   snap restart prometheus-alertmanager
 
 - |
+  set -eux
   # Prometheus
 
   # Generate private key
@@ -315,7 +332,8 @@ runcmd:
   openssl genpkey -algorithm RSA -out /var/snap/prometheus/current/prometheus.local.key.pem
 
   # Generate CSR for prometheus using the private key
-  openssl req -config /root/ca/openssl.cnf -key /var/snap/prometheus/current/prometheus.local.key.pem -new -sha256 -out /var/snap/prometheus/current/prometheus.local.csr.pem -subj "/C=GB/CN=prometheus.local" -addext "subjectAltName = DNS:prometheus.local,DNS:www.prometheus.local"
+  # Intentionally not including '/CN=prometheus.local' in '-subj'
+  openssl req -config /root/ca/openssl.cnf -key /var/snap/prometheus/current/prometheus.local.key.pem -new -sha256 -out /var/snap/prometheus/current/prometheus.local.csr.pem -subj "/C=GB/OU=PROMETHEUS" -addext "subjectAltName = DNS:prometheus.local,DNS:www.prometheus.local"
 
   # Create a server certificate by signing the CSR with the root CA private key
   openssl ca -config /root/ca/openssl.cnf -policy policy_loose -extensions server_cert -days 375 -notext -md sha256 -in /var/snap/prometheus/current/prometheus.local.csr.pem -out /var/snap/prometheus/current/prometheus.local.cert.pem -batch
