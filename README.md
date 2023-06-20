@@ -4,57 +4,20 @@ A repository to collect initiatives around making the life of a [charm](https://
 
 ## cloud-init
 
-In the `cloud-init` directory you will find some cloud-init scripts to launch reusable VMs to everyday charm development.
+In the `cloud-init` directory you will find the following cloud-init scripts to launch reusable VMs to everyday charm development:
+
+- `charm-dev-juju-3.2.yaml`
+- `charm-dev-juju-3.1.yaml`
+- `charm-dev-juju-3.0.yaml`
+- `charm-dev-juju-2.9.yaml`
+- `charm-dev-juju-latest-edge.yaml`
 
 
-### `charm-dev-juju-3.1.yaml`
 
-This script will create a VM with:
+These script will create a VM with:
 
-- [juju](https://juju.is) stable 3.1
-- [microk8s](https://juju.is/docs/sdk) 1.26-strict
-- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
-  - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-  - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-  - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
-- [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
-- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
-
-
-### `charm-dev-juju-3.0.yaml`
-
-This script will create a VM with:
-
-- [juju](https://juju.is) stable 3.0
-- [microk8s](https://juju.is/docs/sdk) 1.26-strict
-- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
-  - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-  - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-  - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
-- [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
-- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
-
-
-### `charm-dev-juju-2.9.yaml`
-
-This script will create a VM with:
-
-- juju stable 2.9
-- microk8s 1.26-strict
-- ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
-  - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-  - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-  - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
-- [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
-- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
-
-
-### `charm-dev-juju-latest-edge.yaml`
-
-This script will create a VM with:
-
-- [juju](https://juju.is) latest/edge
-- microk8s 1.26-strict
+- [juju](https://juju.is) (stable `3.2` / `3.1` / `3.0` / `2.9` or `latest-edge`)
+- [microk8s](https://microk8s.io/) 1.27-strict
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
