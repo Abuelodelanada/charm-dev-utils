@@ -8,7 +8,6 @@ In the `cloud-init` directory you will find the following cloud-init scripts to 
 
 - `charm-dev-juju-3.2.yaml`
 - `charm-dev-juju-3.1.yaml`
-- `charm-dev-juju-3.0.yaml`
 - `charm-dev-juju-2.9.yaml`
 - `charm-dev-juju-latest-edge.yaml`
 
@@ -16,7 +15,7 @@ In the `cloud-init` directory you will find the following cloud-init scripts to 
 
 These script will create a VM with:
 
-- [juju](https://juju.is) (stable `3.2` / `3.1` / `3.0` / `2.9` or `latest-edge`)
+- [juju](https://juju.is) (stable `3.2` / `3.1` / `2.9` or `latest-edge`)
 - [microk8s](https://microk8s.io/) 1.27-strict
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
@@ -29,7 +28,7 @@ These script will create a VM with:
 
 ## How to launch a VM using cloud-init script
 
-Let's say you need to launch a VM using [Multipass](https://multipass.run/) that runs `juju 3.0/stable` with:
+Let's say you need to launch a VM using [Multipass](https://multipass.run/) that runs `juju 3.1/stable` with:
 
 - 4G RAM
 - 3 CPUs
@@ -39,7 +38,7 @@ Let's say you need to launch a VM using [Multipass](https://multipass.run/) that
 you may run:
 
 ```shell
-multipass launch --cloud-init charm-dev-juju-3.0.yaml \
+multipass launch --cloud-init charm-dev-juju-3.1.yaml \
 --timeout 1200 \
 --name charm-dev-juju-3 \
 --memory 4G \
