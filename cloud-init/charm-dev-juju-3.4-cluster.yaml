@@ -1,0 +1,216 @@
+# A multipass VM with a 3-node microk8s cluster inside LXD.
+# https://discuss.kubernetes.io/t/microk8s-in-lxd/11520
+#
+# This VM should be at least 8cpu16gb.
+# multipass launch 22.04 --cloud-init charm-dev-juju-3.4-cluster.yaml --timeout 1200 --name three-node --memory 16G --cpus 8 --disk 50G
+
+package_update: true
+
+packages:
+- jq
+- kitty-terminfo
+
+snap:
+  commands:
+  - snap install lxd --channel=5.21/stable
+  - snap install juju --channel=3.4/stable
+  - snap refresh
+
+write_files:
+- path: "/run/lxd-init.yaml"
+  permissions: "0666"
+  content: |
+    config: {}
+    networks:
+    - config:
+        ipv4.address: auto
+        ipv6.address: auto
+      description: ""
+      name: lxdbr0
+      type: ""
+      project: default
+    storage_pools:
+    - config:
+        size: 50GB
+      description: ""
+      name: default
+      driver: zfs
+    profiles:
+    - config: {}
+      description: ""
+      devices:
+        eth0:
+          name: eth0
+          network: lxdbr0
+          type: nic
+        root:
+          path: /
+          pool: default
+          type: disk
+      name: default
+    projects: []
+    cluster: null
+- path: "/run/microk8s.profile"
+  permissions: "0666"
+  content: |
+    # https://raw.githubusercontent.com/ubuntu/microk8s/master/tests/lxc/microk8s-zfs.profile
+    name: microk8s
+    config:
+      boot.autostart: "true"
+      linux.kernel_modules: ip_vs,ip_vs_rr,ip_vs_wrr,ip_vs_sh,ip_tables,ip6_tables,netlink_diag,nf_nat,overlay,br_netfilter
+      raw.lxc: |
+        lxc.apparmor.profile=unconfined
+        #lxc.apparmor.profile=lxc-container-with-nesting
+        lxc.mount.auto=proc:rw sys:rw cgroup:rw
+        lxc.cgroup.devices.allow=a
+        lxc.cap.drop=
+      # FIXME: According to stgraber, setting both nesting and privileged to "true"
+      # "would make escaping the container and gaining root on the host trivial".
+      # https://discuss.linuxcontainers.org/t/apparmor-blocks-systemd-services-in-container/9812/2
+      security.nesting: "true"
+      security.privileged: "true"
+    description: ""
+    devices:
+      aadisable:
+        path: /sys/module/nf_conntrack/parameters/hashsize
+        source: /sys/module/nf_conntrack/parameters/hashsize
+        type: disk
+      aadisable2:
+        path: /dev/zfs
+        source: /dev/zfs
+        type: disk
+      aadisable3:
+        path: /dev/kmsg
+        source: /dev/kmsg
+        type: unix-char
+      aadisable4:
+        path: /sys/fs/bpf
+        source: /sys/fs/bpf
+        type: disk
+      aadisable5:
+        path: /proc/sys/net/netfilter/nf_conntrack_max
+        source: /proc/sys/net/netfilter/nf_conntrack_max
+        type: disk
+- path: "/run/microk8s-cloud-init.yaml"
+  permissions: "0666"
+  content: |
+    # https://discuss.kubernetes.io/t/microk8s-in-lxd/11520
+    # https://github.com/canonical/multipass-blueprints/blob/main/v1/charm-dev.yaml
+    config:
+      cloud-init.user-data: |
+        #cloud-config
+        packages:
+        - jq
+        - kitty-terminfo
+        snap:
+          commands:
+          - snap install microk8s --channel=1.29-strict/stable
+          - snap alias microk8s.kubectl kubectl
+          - snap alias microk8s.kubectl k
+          - snap refresh
+
+        write_files:
+        - path: "/etc/rc.local"
+          permissions: "0755"
+          content: |
+            #!/bin/bash
+
+            apparmor_parser --replace /var/lib/snapd/apparmor/profiles/snap.microk8s.*
+            exit 0
+
+        runcmd:
+        - |
+          # disable swap
+          sysctl -w vm.swappiness=0
+          echo "vm.swappiness = 0" | tee -a /etc/sysctl.conf
+          swapoff -a
+
+          # Disable IPv6
+          echo "net.ipv6.conf.all.disable_ipv6=1" | tee -a /etc/sysctl.conf
+          echo "net.ipv6.conf.default.disable_ipv6=1" | tee -a /etc/sysctl.conf
+          echo "net.ipv6.conf.lo.disable_ipv6=1" | tee -a /etc/sysctl.conf
+          sysctl -p
+
+        - |
+          # Setup microk8s
+          microk8s status --wait-ready
+
+          # The dns addon will restart the api server so you may see a blip in the availability
+          microk8s.enable dns
+          microk8s.kubectl rollout status deployments/coredns -n kube-system -w --timeout=600s
+
+          microk8s.enable rbac
+          microk8s.enable hostpath-storage
+          microk8s.kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
+
+          # MetalLB
+          IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+          microk8s enable metallb:$IPADDR-$IPADDR
+          microk8s.kubectl rollout status daemonset.apps/speaker -n metallb-system -w --timeout=600s
+
+          systemctl restart rc-local
+
+runcmd:
+- DEBIAN_FRONTEND=noninteractive apt-get remove -y landscape-client landscape-common adwaita-icon-theme humanity-icon-theme
+- DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+- DEBIAN_FRONTEND=noninteractive apt-get -y autoremove
+
+- |
+  # disable swap
+  sysctl -w vm.swappiness=0
+  echo "vm.swappiness = 0" | tee -a /etc/sysctl.conf
+  swapoff -a
+
+- |
+  # disable unnecessary services
+  systemctl disable man-db.timer man-db.service --now
+  systemctl disable apport.service apport-autoreport.service  --now
+  systemctl disable apt-daily.service apt-daily.timer --now
+  systemctl disable apt-daily-upgrade.service apt-daily-upgrade.timer --now
+  systemctl disable unattended-upgrades.service --now
+  systemctl disable motd-news.service motd-news.timer --now
+  systemctl disable bluetooth.target --now
+  systemctl disable ua-messaging.service ua-messaging.timer --now
+  systemctl disable ua-timer.timer ua-timer.service --now
+  systemctl disable systemd-tmpfiles-clean.timer --now
+
+  # Disable IPv6
+  echo "net.ipv6.conf.all.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.default.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.lo.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  sysctl -p
+
+- |
+  # Setup lxd
+  adduser ubuntu lxd
+
+  cat /run/lxd-init.yaml | sudo -u ubuntu lxd init --preseed
+  sudo -u ubuntu lxc profile create microk8s
+  cat /run/microk8s.profile | sudo -u ubuntu lxc profile edit microk8s
+
+  sudo -u ubuntu lxc launch -p default -p microk8s ubuntu:22.04 node-0 < /run/microk8s-cloud-init.yaml
+  sudo -u ubuntu lxc exec node-0 -- cloud-init status --wait
+  sudo -u ubuntu lxc launch -p default -p microk8s ubuntu:22.04 node-1 < /run/microk8s-cloud-init.yaml
+  sudo -u ubuntu lxc exec node-1 -- cloud-init status --wait
+  sudo -u ubuntu lxc launch -p default -p microk8s ubuntu:22.04 node-2 < /run/microk8s-cloud-init.yaml
+  sudo -u ubuntu lxc exec node-2 -- cloud-init status --wait
+
+  TOKEN=$(tr -dc a-f0-9 </dev/urandom | head -c 32)
+  URL=$(sudo -u ubuntu lxc exec node-0 -- microk8s add-node --token $TOKEN --format json | jq -r '.urls[0]')
+  lxc exec node-1 -- microk8s join $URL
+
+  TOKEN=$(tr -dc a-f0-9 </dev/urandom | head -c 32)
+  URL=$(sudo -u ubuntu lxc exec node-0 -- microk8s add-node --token $TOKEN --format json | jq -r '.urls[0]')
+  lxc exec node-2 -- microk8s join $URL
+
+- |
+  # Setup juju
+  sudo -u ubuntu mkdir -p /home/ubuntu/.local/share/juju
+  KUBECONFIG="/home/ubuntu/node-0.microk8s.conf"
+  sudo -u ubuntu lxc exec node-0 -- microk8s config > $KUBECONFIG
+  chown ubuntu:ubuntu $KUBECONFIG
+  sudo -u ubuntu sh -c 'KUBECONFIG="/home/ubuntu/node-0.microk8s.conf" juju add-k8s microk8s-cluster --client'
+  sudo -u ubuntu juju bootstrap microk8s-cluster k8s
+
+
+final_message: "The system is finally up, after $UPTIME seconds"
