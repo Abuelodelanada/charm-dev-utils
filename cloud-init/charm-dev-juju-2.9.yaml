@@ -56,6 +56,8 @@ runcmd:
   sysctl -p
 
 - |
+  # set right owner to /home/ubuntu directory
+  chown ubuntu:ubuntu /home/ubuntu
   # oh-my-zsh + juju plugin + scenario
   sudo -u ubuntu sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   sudo -u ubuntu git clone https://github.com/zsh-users/zsh-autosuggestions.git ~ubuntu/.oh-my-zsh/custom/plugins/zsh-autosuggestions
