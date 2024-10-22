@@ -17,7 +17,7 @@ In the `cloud-init` directory you will find the following cloud-init scripts to 
 
 These script will create a VM with:
 
-- [juju](https://juju.is) (stable `3.4`, `3.3`, `3.2`, `3.1`, `2.9` or `latest-edge`)
+- [juju](https://juju.is) (stable `3.5`, `3.4`, `3.3`, `3.2`, `3.1`, `2.9` or `latest-edge`)
 - [microk8s](https://microk8s.io/) 1.29-strict
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
@@ -30,36 +30,92 @@ These script will create a VM with:
 
 ## How to launch a VM using cloud-init script
 
-Let's say you need to launch a VM using [Multipass](https://multipass.run/) that runs `juju 3.4/stable` with:
+### Using LXD
+
+Let's say you need to launch a VM using [LXD](https://canonical.com/lxd) that runs `juju 3.5/stable` with:
 
 - 4G RAM
 - 3 CPUs
 - 30G disk
 - and mounting your `repos` directory inside the ubuntu user home directory
+- an IP provided by the DHCP present in the host network
 
-you may run:
+you need to run:
 
 ```shell
-multipass launch --cloud-init charm-dev-juju-3.4.yaml \
---timeout 1200 \
---name charm-dev-juju-34 \
---memory 4G \
---cpus 3 \
---disk 30G \
---mount /home/jose/trabajos/canonical/repos:/home/ubuntu/repos
+lxc init ubuntu:24.04 charm-dev-35 --vm \
+  -c limits.memory=4GB \
+  -c limits.cpu=3 \
+  -c cloud-init.user-data="$(cat charm-dev-juju-3.5.yaml)" \
+  -c environment.LXC_START_COMMAND="/bin/zsh --login -c 'su - ubuntu'" \
+  -s default
 ```
 
-Once the VM is ready you will see:
-
+```shell
+lxc config device set charm-dev-35 root size=30GB
 ```
-Launched: charm-dev-juju-34
-Mounted '/home/jose/trabajos/canonical/repos' into 'charm-dev-juju-34:/home/ubuntu/repos'
+
+```shell
+lxc config device add charm-dev-35 repos disk \
+  source=/home/jose/trabajos/canonical/repos \
+  path=/home/ubuntu/repos
+```
+
+```shell
+lxc config device add charm-dev-35 eth0 nic \
+  nictype=bridged \
+  parent=br-enp1s0
+```
+
+
+```shell
+lxc start charm-dev-35
 ```
 
 Now you can jump into the new VM:
 
 ```shell
-multipass shell charm-dev-juju-34
+lxc exec charm-dev-35 -- su ubuntu
+
+╭─ubuntu@charm-dev-35 /root [lxd:null]
+╰─$
+```
+And voilà, you have a VM with all you need to start developing Charmed Operators!
+
+### Using Multipass
+
+Let's say you need to launch a VM using [Multipass](https://multipass.run/) that runs `juju 3.5/stable` with:
+
+- 4G RAM
+- 3 CPUs
+- 30G disk
+- and mounting your `repos` directory inside the ubuntu user home directory
+- an IP address provide
+
+you may run:
+
+```shell
+multipass launch --cloud-init charm-dev-juju-3.5.yaml \
+--timeout 1200 \
+--name charm-dev-35 \
+--memory 4G \
+--cpus 3 \
+--disk 30G \
+--mount /home/jose/trabajos/canonical/repos:/home/ubuntu/repos \
+--network enp1s0
+```
+
+Once the VM is ready you will see:
+
+```
+Launched: charm-dev-35
+Mounted '/home/jose/trabajos/canonical/repos' into 'charm-dev-35:/home/ubuntu/repos'
+```
+
+Now you can jump into the new VM:
+
+```shell
+multipass shell charm-dev-35
 ```
 
 ```shell
@@ -84,8 +140,8 @@ Enable ESM Apps to receive additional future security updates.
 See https://ubuntu.com/esm or run: sudo pro status
 
 
-╭─ubuntu@charm-dev-juju-34 ~ [lxd:null]
-╰─$ 
+╭─ubuntu@charm-dev-35 ~ [lxd:null]
+╰─$
 ```
 
 And voilà, you have a VM with all you need to start developing Charmed Operators!
