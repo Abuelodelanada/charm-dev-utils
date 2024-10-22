@@ -15,7 +15,7 @@ packages:
 snap:
   commands:
   - snap install juju --channel=latest/edge
-  - snap install microk8s --channel 1.27-strict/stable
+  - snap install microk8s --channel 1.31-strict/stable
   - snap alias microk8s.kubectl kubectl
   - snap alias microk8s.kubectl k
   - snap install --classic charmcraft
