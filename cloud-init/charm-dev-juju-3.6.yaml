@@ -1,0 +1,130 @@
+#cloud-config
+---
+
+package_update: true
+
+packages:
+- python3-pip
+- jq
+- sysstat
+- zsh
+- fzf
+- tox
+- gnome-keyring
+- kitty-terminfo
+- sshfs
+
+snap:
+  commands:
+  - snap install juju --channel=3.6/candidate
+  - snap install microk8s --channel 1.31-strict/stable
+  - snap alias microk8s.kubectl kubectl
+  - snap alias microk8s.kubectl k
+  - snap install --classic charmcraft
+  - snap install --classic rockcraft
+  - snap install jhack --channel=latest/stable
+  - snap install yq
+  - snap install multipass-sshfs
+  - snap install just --classic
+  - snap refresh
+
+runcmd:
+- DEBIAN_FRONTEND=noninteractive apt-get remove -y landscape-client landscape-common adwaita-icon-theme humanity-icon-theme
+- DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+- DEBIAN_FRONTEND=noninteractive apt-get -y autoremove
+
+- |
+  # disable swap
+  sysctl -w vm.swappiness=0
+  echo "vm.swappiness = 0" | tee -a /etc/sysctl.conf
+  swapoff -a
+
+- |
+  # disable unnecessary services
+  systemctl disable man-db.timer man-db.service --now
+  systemctl disable apport.service apport-autoreport.service  --now
+  systemctl disable apt-daily.service apt-daily.timer --now
+  systemctl disable apt-daily-upgrade.service apt-daily-upgrade.timer --now
+  systemctl disable unattended-upgrades.service --now
+  systemctl disable motd-news.service motd-news.timer --now
+  systemctl disable bluetooth.target --now
+  systemctl disable ua-messaging.service ua-messaging.timer --now
+  systemctl disable ua-timer.timer ua-timer.service --now
+  systemctl disable systemd-tmpfiles-clean.timer --now
+
+  # Disable IPv6
+  echo "net.ipv6.conf.all.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.default.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.lo.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  sysctl -p
+
+- |
+  # set right owner to /home/ubuntu directory
+  chown ubuntu:ubuntu /home/ubuntu
+  # oh-my-zsh + juju plugin
+  sudo -u ubuntu sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  sudo -u ubuntu git clone https://github.com/zsh-users/zsh-autosuggestions.git ~ubuntu/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+  sudo -u ubuntu git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~ubuntu/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+  sudo -u ubuntu sed -i 's/plugins=(git)/plugins=(fzf git zsh-autosuggestions zsh-syntax-highlighting virtualenv colored-man-pages juju colorize)/g' ~ubuntu/.zshrc
+  sudo -u ubuntu echo 'export PATH=$PATH:$HOME/.local/bin' >> ~ubuntu/.zshrc
+  sudo -u ubuntu wget -P ~ubuntu/.oh-my-zsh/themes/ https://raw.githubusercontent.com/Abuelodelanada/charm-dev-utils/main/zsh_themes/juju.zsh-theme
+  sudo -u ubuntu sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="juju"/g' ~ubuntu/.zshrc
+
+- |
+  # Make sure juju directory is there
+  sudo -u ubuntu mkdir -p /home/ubuntu/.local/share/juju
+
+- |
+  # Install goss and kgoos
+  sudo -u ubuntu mkdir -p /home/ubuntu/.local/bin/
+  sudo -u ubuntu curl -L https://github.com/goss-org/goss/releases/latest/download/goss-linux-amd64 -o /home/ubuntu/.local/bin/goss
+  chmod +x /home/ubuntu/.local/bin/goss
+  sudo -u ubuntu curl -L https://raw.githubusercontent.com/goss-org/goss/master/extras/kgoss/kgoss -o /home/ubuntu/.local/bin/kgoss
+  chmod +x /home/ubuntu/.local/bin/kgoss
+
+- |
+  # change default shell
+  sudo chsh -s /bin/zsh ubuntu
+
+- |
+  # setup charmcraft
+  lxd init --auto
+  adduser ubuntu lxd
+
+- |
+  # setup microk8s and bootstrap
+  sudo usermod -a -G snap_microk8s ubuntu
+  sudo -u ubuntu mkdir -p /home/ubuntu/.kube
+  adduser ubuntu snap_microk8s
+  microk8s status --wait-ready
+
+  microk8s.enable registry
+  microk8s.enable metrics-server
+  microk8s.kubectl rollout status deployments/metrics-server -n kube-system -w --timeout=600s
+
+  # The dns addon will restart the api server so you may see a blip in the availability
+  # Separating addons to avoid errors such as
+  # dial tcp 127.0.0.1:16443: connect: connection refused
+  microk8s.enable dns
+  microk8s.enable storage
+  microk8s.enable rbac
+  microk8s.kubectl rollout status deployments/coredns -n kube-system -w --timeout=600s
+
+  microk8s.enable hostpath-storage
+  microk8s.enable ingress
+  # wait for storage, ingress to become available
+  microk8s.kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
+  microk8s.kubectl rollout status daemonsets/nginx-ingress-microk8s-controller -n ingress -w --timeout=600s
+
+  sudo -u ubuntu juju bootstrap microk8s microk8s
+
+  # dump config (this is needed for utils such as k9s or kdash)
+  microk8s config | sudo -u ubuntu tee /home/ubuntu/.kube/config > /dev/null
+
+  # bootstrap lxd
+  sudo -u ubuntu juju bootstrap localhost lxd
+
+  # We need to connect the dot-local-share-juju interface with jhack
+  sudo snap connect jhack:dot-local-share-juju snapd
+
+final_message: "The system is finally up, after $UPTIME seconds"
