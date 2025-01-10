@@ -2,6 +2,19 @@
 
 A repository to collect initiatives around making the life of a [charm](https://juju.is/docs/sdk) author easier.
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Charm development utils](#charm-development-utils)
+    - [cloud-init](#cloud-init)
+    - [How to launch a VM using cloud-init script](#how-to-launch-a-vm-using-cloud-init-script)
+        - [Using LXD](#using-lxd)
+        - [Using Multipass](#using-multipass)
+    - [zsh_themes](#zsh_themes)
+
+<!-- markdown-toc end -->
+
+
 ## cloud-init
 
 In the `cloud-init` directory you will find the following cloud-init scripts to launch reusable VMs to everyday charm development:
