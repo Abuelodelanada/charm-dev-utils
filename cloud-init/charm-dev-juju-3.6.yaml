@@ -83,6 +83,11 @@ runcmd:
   chmod +x /home/ubuntu/.local/bin/kgoss
 
 - |
+  # Install uv
+  sudo -u ubuntu curl -LsSf https://astral.sh/uv/install.sh | sh
+  sudo -u ubuntu echo 'eval "$(uv generate-shell-completion zsh)"' >> ~/.zshrc
+
+- |
   # change default shell
   sudo chsh -s /bin/zsh ubuntu
 
