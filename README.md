@@ -6,11 +6,11 @@ A repository to collect initiatives around making the life of a [charm](https://
 **Table of Contents**
 
 - [Charm development utils](#charm-development-utils)
-    - [cloud-init](#cloud-init)
-    - [How to launch a VM using cloud-init script](#how-to-launch-a-vm-using-cloud-init-script)
-        - [Using LXD](#using-lxd)
-        - [Using Multipass](#using-multipass)
-    - [zsh_themes](#zsh_themes)
+  - [cloud-init](#cloud-init)
+  - [How to launch a VM using cloud-init script](#how-to-launch-a-vm-using-cloud-init-script)
+    - [Using Multipass](#using-multipass)
+    - [Using LXD](#using-lxd)
+  - [zsh_themes](#zsh_themes)
 
 <!-- markdown-toc end -->
 
@@ -31,7 +31,6 @@ These script will create a VM with:
   - [syntax highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
   - [juju](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/juju)
 - [Pietro's](https://github.com/PietroPasotti/) amazing [jhack](https://github.com/PietroPasotti/jhack) tool.
-- [Scenario `snapshot` cli tool](https://github.com/canonical/ops-scenario#snapshot).
 - [just](https://github.com/casey/just)
 - [goss + kgoss](https://github.com/goss-org/goss)
 
