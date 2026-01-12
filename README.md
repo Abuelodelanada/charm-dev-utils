@@ -19,12 +19,13 @@ A repository to collect initiatives around making the life of a [charm](https://
 
 In the `cloud-init` directory you will find the following cloud-init scripts to launch reusable VMs to everyday charm development:
 
+- `charm-dev-juju-4.0.yaml`
 - `charm-dev-juju-3.6.yaml`
 
 
 These script will create a VM with:
 
-- [juju](https://juju.is) (stable `3.6`)
+- [juju](https://juju.is) (stable `4.0` and `3.6`)
 - [Canonical Kubernetes](https://snapcraft.io/k8s) 1.35-classic/stable
 - ZSH as a default SHELL with [oh-my-zsh](https://ohmyz.sh/) and [juju theme](https://github.com/Abuelodelanada/charm-dev-utils/blob/main/zsh_themes/juju.zsh-theme) with plugins:
   - [autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
